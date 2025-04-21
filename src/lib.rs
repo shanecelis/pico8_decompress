@@ -1,3 +1,11 @@
+#[cfg(feature = "png")]
+use std::{
+    path::Path,
+    io::{self, Write},
+    process,
+    fs::File,
+    env
+};
 // mod p8_compress;
 // pub use p8_compress::*;
 // mod pxa_compress_snippets;
@@ -18,18 +26,31 @@ pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     v
 }
 
+#[cfg(feature = "png")]
+pub fn extract_bits_from_png(png: impl io::Read) -> io::Result<Vec<u8>> {
+    let decoder = png::Decoder::new(png);
+    let mut reader = decoder.read_info()?;
+    // Allocate the output buffer.
+    let mut buf = vec![0; reader.output_buffer_size()];
+    // Read the next frame. An APNG might contain multiple frames.
+    let info = reader.next_frame(&mut buf)?;
+    Ok(extract_bits(&buf))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     fn offset(i: usize) -> usize {
-        (i + 2) % 4
+        let v = i % 4;
+        v ^ ((!v & 1) << 1)
     }
 
     #[test]
-    fn it_works() {
-        assert_eq!(offset(0), 2);
-        assert_eq!(offset(1), 1);
-        assert_eq!(offset(2), 0);
-        assert_eq!(offset(3), 3);
+    fn offset_works() {
+        assert_eq!(offset(0), 2); // 0b00 -> 0b10
+        assert_eq!(offset(1), 1); // 0b01 -> 0b01
+        assert_eq!(offset(2), 0); // 0b10 -> 0b00
+        assert_eq!(offset(3), 3); // 0b11 -> 0b11
+        assert_eq!(offset(4), 2);
     }
 }
