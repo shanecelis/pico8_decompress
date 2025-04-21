@@ -4,7 +4,7 @@ use std::{
     fs::File,
     env
 };
-use pico8_png::*;
+use pico8_pxa::*;
 
 use png;
 

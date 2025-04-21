@@ -1,11 +1,10 @@
 [package]
-name = "pico8-png"
+name = "pico8_pxa"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
 png = { version = "0.17.16", optional = true }
-trace = "0.1.7"
 
 [features]
 default = [ "png" ]

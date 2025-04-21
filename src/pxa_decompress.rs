@@ -1,7 +1,4 @@
 use std::{fmt, cmp::min};
-use trace::trace;
-
-trace::init_depth_var!();
 
 const PXA_MIN_BLOCK_LEN: usize = 3;
 const BLOCK_LEN_CHAIN_BITS: usize = 3;
@@ -28,11 +25,9 @@ impl<'a> fmt::Debug for PxaDecompressor<'a> {
     }
 }
 
+/// Decompress Pico8 P8 PNG compressed text data, usually Lua code.
 pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, &'static str> {
-    let mut pxa = PxaDecompressor::new(src_buf);
-    let result = pxa.decompress(max_len);
-    // dbg!(pxa);
-    result
+    PxaDecompressor::new(src_buf).decompress(max_len)
 }
 
 impl<'a> PxaDecompressor<'a> {
@@ -57,7 +52,6 @@ impl<'a> PxaDecompressor<'a> {
         }
     }
 
-    // #[trace]
     fn getbit(&mut self) -> bool {
         let ret = (self.src_buf[self.src_pos] & self.bit) != 0;
         if self.bit == 128 {
@@ -69,7 +63,6 @@ impl<'a> PxaDecompressor<'a> {
         ret
     }
 
-    // #[trace]
     fn getval(&mut self, bits: usize) -> usize {
         assert!(bits <= 15, "bits were {bits}");
 
@@ -97,7 +90,6 @@ impl<'a> PxaDecompressor<'a> {
         }
     }
 
-    // #[trace]
     fn putval(&mut self, val: usize, bits: usize) -> usize {
         for i in 0..bits {
             self.putbit((val & (1 << i)) != 0);
@@ -105,7 +97,6 @@ impl<'a> PxaDecompressor<'a> {
         bits
     }
 
-    // #[trace]
     fn putchain(&mut self, mut val: usize, link_bits: usize, max_bits: usize) -> usize {
         let max_link_val = (1 << link_bits) - 1;
         let mut bits_written = 0;
@@ -123,7 +114,6 @@ impl<'a> PxaDecompressor<'a> {
         bits_written
     }
 
-    // #[trace]
     fn getchain(&mut self, link_bits: usize, max_bits: usize) -> usize {
         let max_link_val = (1 << link_bits) - 1;
         let mut val = 0;
@@ -142,7 +132,6 @@ impl<'a> PxaDecompressor<'a> {
         val
     }
 
-    // #[trace]
     fn getnum(&mut self) -> Option<usize> {
         // 1  15 bits // more frequent so put first
         // 01 10 bits
@@ -184,10 +173,6 @@ impl<'a> PxaDecompressor<'a> {
                         self.dest_pos += 1;
                         block_len -= 1;
                     }
-
-                    // if self.dest_pos < max_len - 1 {
-                    //     self.dest_buf[self.dest_pos] = 0;
-                    // }
                 } else {
                     while self.dest_pos < max_len {
                         let v = self.getval(8) as u8;

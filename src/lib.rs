@@ -6,11 +6,9 @@ use std::{
     fs::File,
     env
 };
-// mod p8_compress;
-// pub use p8_compress::*;
-// mod pxa_compress_snippets;
 mod pxa_decompress;
 pub use pxa_decompress::*;
+/// Extract the two least significant bits from PNG RGBA frame data.
 pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     let mut v = Vec::with_capacity(bytes.len() / 4);
     let mut accum = 0;
@@ -26,6 +24,7 @@ pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     v
 }
 
+/// Extract two least significant bits from PNG file contents directly.
 #[cfg(feature = "png")]
 pub fn extract_bits_from_png(png: impl io::Read) -> io::Result<Vec<u8>> {
     let decoder = png::Decoder::new(png);
