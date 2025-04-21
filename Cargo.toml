@@ -1,5 +1,5 @@
 [package]
-name = "pico8_pxa"
+name = "pico8_decompress"
 version = "0.1.0"
 edition = "2024"
 

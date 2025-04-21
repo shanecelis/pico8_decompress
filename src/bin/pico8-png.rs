@@ -4,7 +4,7 @@ use std::{
     fs::File,
     env
 };
-use pico8_pxa::*;
+use pico8_decompress::*;
 
 
 fn main() -> io::Result<()> {
