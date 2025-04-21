@@ -1,11 +1,5 @@
 #[cfg(feature = "png")]
-use std::{
-    path::Path,
-    io::{self, Write},
-    process,
-    fs::File,
-    env
-};
+use std::io::{self};
 mod pxa_decompress;
 pub use pxa_decompress::*;
 /// Extract the two least significant bits from PNG RGBA frame data.
@@ -32,13 +26,13 @@ pub fn extract_bits_from_png(png: impl io::Read) -> io::Result<Vec<u8>> {
     // Allocate the output buffer.
     let mut buf = vec![0; reader.output_buffer_size()];
     // Read the next frame. An APNG might contain multiple frames.
-    let info = reader.next_frame(&mut buf)?;
+    let _info = reader.next_frame(&mut buf)?;
     Ok(extract_bits(&buf))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
     fn offset(i: usize) -> usize {
         let v = i % 4;
         v ^ ((!v & 1) << 1)

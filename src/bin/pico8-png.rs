@@ -6,11 +6,10 @@ use std::{
 };
 use pico8_pxa::*;
 
-use png;
 
 fn main() -> io::Result<()> {
-    let args = env::args();
-    let Some(arg) = args.skip(1).next() else {
+    let mut args = env::args();
+    let Some(arg) = args.nth(1) else {
         // usage(std::io::stderr())?;
         process::exit(2);
     };
@@ -18,9 +17,9 @@ fn main() -> io::Result<()> {
     // Grab the bytes of the image.
     let mut out = io::stdout();
     // let mut code = vec![];
-    let code = decompress(&v[0x4300..=0x7fff], None).unwrap();
+    let code = decompress(&v[0x4300..=0x7fff], None).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     // eprintln!("size {}", code.len());
-    out.write(&code);
+    let _ = out.write(&code)?;
     // out.write(&v[..]);
     Ok(())
 }

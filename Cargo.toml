@@ -5,6 +5,7 @@ edition = "2024"
 
 [dependencies]
 png = { version = "0.17.16", optional = true }
+thiserror = "2.0.12"
 
 [features]
 default = [ "png" ]

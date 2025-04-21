@@ -14,7 +14,7 @@ struct PxaDecompressor<'a> {
     literal: [u8; 256],
     literal_pos: [u8; 256],
 }
-impl<'a> fmt::Debug for PxaDecompressor<'a> {
+impl fmt::Debug for PxaDecompressor<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("PxaDecompressor")
             .field("bit", &self.bit)
@@ -25,8 +25,14 @@ impl<'a> fmt::Debug for PxaDecompressor<'a> {
     }
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum PxaError {
+    #[error("Literal overflow")]
+    LiteralOverflow,
+}
+
 /// Decompress Pico8 P8 PNG compressed text data, usually Lua code.
-pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, &'static str> {
+pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, PxaError> {
     PxaDecompressor::new(src_buf).decompress(max_len)
 }
 
@@ -75,44 +81,44 @@ impl<'a> PxaDecompressor<'a> {
         val
     }
 
-    fn putbit(&mut self, bval: bool) {
-        if bval {
-            self.dest_buf[self.dest_pos] |= self.bit;
-        } else {
-            self.dest_buf[self.dest_pos] &= !self.bit;
-        }
-        if self.bit == 128 {
-            self.bit = 1;
-            self.dest_pos += 1;
-            // self.byte = self.dest_buf[self.dest_pos];
-        } else {
-            self.bit <<= 1;
-        }
-    }
+    // fn putbit(&mut self, bval: bool) {
+    //     if bval {
+    //         self.dest_buf[self.dest_pos] |= self.bit;
+    //     } else {
+    //         self.dest_buf[self.dest_pos] &= !self.bit;
+    //     }
+    //     if self.bit == 128 {
+    //         self.bit = 1;
+    //         self.dest_pos += 1;
+    //         // self.byte = self.dest_buf[self.dest_pos];
+    //     } else {
+    //         self.bit <<= 1;
+    //     }
+    // }
 
-    fn putval(&mut self, val: usize, bits: usize) -> usize {
-        for i in 0..bits {
-            self.putbit((val & (1 << i)) != 0);
-        }
-        bits
-    }
+    // fn putval(&mut self, val: usize, bits: usize) -> usize {
+    //     for i in 0..bits {
+    //         self.putbit((val & (1 << i)) != 0);
+    //     }
+    //     bits
+    // }
 
-    fn putchain(&mut self, mut val: usize, link_bits: usize, max_bits: usize) -> usize {
-        let max_link_val = (1 << link_bits) - 1;
-        let mut bits_written = 0;
-        let mut vv = max_link_val;
+    // fn putchain(&mut self, mut val: usize, link_bits: usize, max_bits: usize) -> usize {
+    //     let max_link_val = (1 << link_bits) - 1;
+    //     let mut bits_written = 0;
+    //     let mut vv = max_link_val;
 
-        while vv == max_link_val {
-            vv = min(val, max_link_val);
-            bits_written += self.putval(vv, link_bits);
-            val -= vv;
+    //     while vv == max_link_val {
+    //         vv = min(val, max_link_val);
+    //         bits_written += self.putval(vv, link_bits);
+    //         val -= vv;
 
-            if bits_written >= max_bits {
-                break;
-            }
-        }
-        bits_written
-    }
+    //         if bits_written >= max_bits {
+    //             break;
+    //         }
+    //     }
+    //     bits_written
+    // }
 
     fn getchain(&mut self, link_bits: usize, max_bits: usize) -> usize {
         let max_link_val = (1 << link_bits) - 1;
@@ -147,14 +153,14 @@ impl<'a> PxaDecompressor<'a> {
         }
     }
 
-    pub fn decompress(&mut self, max_len: Option<usize>) -> Result<Vec<u8>, &'static str> {
-        let mut header = [0; 8];
-        for i in 0..8 {
-            header[i] = self.getval(8);
+    pub fn decompress(&mut self, max_len: Option<usize>) -> Result<Vec<u8>, PxaError> {
+        let mut header: [usize; 8] = [0; 8];
+        for item in &mut header {
+            *item = self.getval(8);
         }
 
-        let raw_len = header[4] * 256 + header[5];
-        let comp_len = header[6] * 256 + header[7];
+        let raw_len = (header[4] << 8) | header[5];
+        let comp_len = (header[6] << 8) | header[7];
         let max_len = max_len.map(|x| min(x, raw_len)).unwrap_or(raw_len);
         self.dest_buf = vec![0x00; max_len];
 
@@ -188,7 +194,7 @@ impl<'a> PxaDecompressor<'a> {
                 let mut bits = 0;
                 let mut safety = 0;
                 while self.getbit() && safety < 16 {
-                    lpos += (1 << (TINY_LITERAL_BITS + bits));
+                    lpos += 1 << (TINY_LITERAL_BITS + bits);
                     bits += 1;
                     safety += 1;
                 }
@@ -197,12 +203,12 @@ impl<'a> PxaDecompressor<'a> {
                 lpos += self.getval(bits);
 
                 if lpos > 255 {
-                    return Err("Something wrong");
+                    return Err(PxaError::LiteralOverflow);
                 }
 
                 let c = self.literal[lpos];
 
-                self.dest_buf[self.dest_pos] = c as u8;
+                self.dest_buf[self.dest_pos] = c;
                 self.dest_pos += 1;
                 // self.dest_buf[self.dest_pos] = 0;
 
@@ -220,12 +226,11 @@ impl<'a> PxaDecompressor<'a> {
 }
 #[cfg(test)]
 mod test {
-    use std::io::BufRead;
     use super::*;
     use crate::*;
-    const compressed_data: &[u8] = include_bytes!("p8png-test.p8.png");
+    const COMPRESSED_DATA: &[u8] = include_bytes!("p8png-test.p8.png");
     fn decompress_data(max_len: Option<usize>) -> Vec<u8> {
-        let v = extract_bits_from_png(compressed_data).unwrap();
+        let v = extract_bits_from_png(COMPRESSED_DATA).unwrap();
         // grab the bytes of the image.
         decompress(&v[0x4300..=0x7fff], max_len).unwrap()
     }
@@ -246,46 +251,4 @@ mod test {
         assert_eq!("-- ", lines[0]);
     }
 
-    #[test]
-    fn test_for() {
-        for _ in 0..0 {
-            panic!();
-        }
-    }
-
-    #[test]
-    fn test_for_forwards() {
-        let mut i = 0;
-        for _ in 0..10 {
-            i += 1;
-        }
-        assert_eq!(10, i);
-    }
-
-    #[test]
-    fn test_for_backwards() {
-        let mut i = 0;
-        for _ in 10..0 {
-            i += 1;
-        }
-        assert_eq!(0, i);
-    }
-
-    #[test]
-    fn test_for_backwards_rev() {
-        let mut i = 0;
-        for _ in (0..10).rev() {
-            i += 1;
-        }
-        assert_eq!(10, i);
-    }
 }
-
-// fn main() {
-//     let mut decompressed_data = vec![0u8; 65536]; // max size
-
-//     let mut decompressor = PxaDecompressor::new(compressed_data, &mut decompressed_data);
-//     let decompressed_len = decompressor.decompress();
-
-//     println!("Decompressed {} bytes", decompressed_len);
-// }
