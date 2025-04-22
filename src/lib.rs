@@ -1,7 +1,6 @@
 #[cfg(feature = "png")]
 use std::io::{self};
-mod pxa;
-pub use pxa::*;
+pub mod pxa;
 /// Extract the two least significant bits from PNG RGBA frame data.
 pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     let mut v = Vec::with_capacity(bytes.len() / 4);

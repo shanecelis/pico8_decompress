@@ -6,7 +6,6 @@ use std::{
 };
 use pico8_decompress::*;
 
-
 fn main() -> io::Result<()> {
     let mut args = env::args();
     let Some(arg) = args.nth(1) else {
