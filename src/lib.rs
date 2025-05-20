@@ -1,12 +1,12 @@
 #[cfg(feature = "png")]
 use std::io::{self};
-pub mod pxa;
 pub mod p8;
+pub mod pxa;
 /// Extract the two least significant bits from PNG RGBA frame data.
 pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     let mut v = Vec::with_capacity(bytes.len() / 4);
     let mut accum = 0;
-    for (i, (byte, offset)) in bytes.iter().zip([2,1,0,3].iter().cycle()).enumerate() {
+    for (i, (byte, offset)) in bytes.iter().zip([2, 1, 0, 3].iter().cycle()).enumerate() {
         let semi_nybble_index = i % 4;
         let semi_nybble = *byte & 0b11;
         accum |= semi_nybble << (offset * 2);
@@ -34,7 +34,6 @@ pub enum Error {
 }
 
 fn compression_header(src_buf: &[u8]) -> Compression {
-
     if src_buf[0] == 0 || src_buf[1] == b'p' || src_buf[2] == b'x' || src_buf[3] == b'a' {
         Compression::Pxa
     } else if src_buf[0] == b':' || src_buf[1] == b'c' || src_buf[2] == b':' || src_buf[3] == 0 {
@@ -53,7 +52,7 @@ pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, Err
             let size = p8::decompress(src_buf, &mut output)?;
             output.truncate(size);
             Ok(output)
-        },
+        }
         Compression::Legacy => todo!(),
     }
 }
@@ -72,7 +71,7 @@ pub fn extract_bits_from_png(png: impl io::Read) -> io::Result<Vec<u8>> {
 
 #[cfg(test)]
 mod tests {
-    
+
     fn offset(i: usize) -> usize {
         let v = i % 4;
         v ^ ((!v & 1) << 1)

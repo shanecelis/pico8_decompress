@@ -6,7 +6,7 @@
   Copyright (c) 2020-22  Lexaloffle Games LLP
 */
 
-use std::{fmt, cmp::min};
+use std::{cmp::min, fmt};
 
 const PXA_MIN_BLOCK_LEN: usize = 3;
 const BLOCK_LEN_CHAIN_BITS: usize = 3;
@@ -185,8 +185,8 @@ impl<'a> PxaDecompressor<'a> {
                 let block_offset = self.getnum().map(|x| x + 1);
 
                 if let Some(block_offset) = block_offset {
-
-                    let mut block_len = self.getchain(BLOCK_LEN_CHAIN_BITS, 100000) + PXA_MIN_BLOCK_LEN;
+                    let mut block_len =
+                        self.getchain(BLOCK_LEN_CHAIN_BITS, 100000) + PXA_MIN_BLOCK_LEN;
 
                     while block_len > 0 {
                         self.dest_buf[self.dest_pos] = self.dest_buf[self.dest_pos - block_offset];
@@ -264,5 +264,4 @@ mod test {
         let lines: Vec<_> = code.lines().collect();
         assert_eq!("-- ", lines[0]);
     }
-
 }

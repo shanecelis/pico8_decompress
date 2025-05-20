@@ -24,13 +24,11 @@
 
 const LITERALS: usize = 60;
 
-const FUTURE_CODE: &str =
-    "if(_update60)_update=function()_update60()_update60()end";
+const FUTURE_CODE: &str = "if(_update60)_update=function()_update60()_update60()end";
 const FUTURE_CODE2: &str =
     "if(_update60)_update=function()_update60()_update_buttons()_update60()end";
 
-const LITERAL: &str =
-    "^\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
+const LITERAL: &str = "^\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
 
 #[derive(thiserror::Error, Debug)]
 pub enum P8Error {
@@ -96,13 +94,16 @@ pub fn decompress(input: &[u8], output: &mut [u8]) -> Result<usize, P8Error> {
             block_offset += (val2 % 16) as usize;
             let block_length = (val2 / 16) as usize + 2;
 
-            if block_offset == 0 || out_pos < block_offset || out_pos + block_length > output.len() {
+            if block_offset == 0 || out_pos < block_offset || out_pos + block_length > output.len()
+            {
                 return Err(P8Error::InvalidBlock);
             }
 
             let (src, dst) = output.split_at_mut(out_pos);
             let (from, _to) = dst.split_at_mut(block_length);
-            from.copy_from_slice(&src[out_pos - block_offset..out_pos - block_offset + block_length]);
+            from.copy_from_slice(
+                &src[out_pos - block_offset..out_pos - block_offset + block_length],
+            );
             out_pos += block_length;
         }
     }
