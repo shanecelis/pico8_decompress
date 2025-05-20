@@ -1,3 +1,11 @@
+/*
+  pxa compression snippets for PICO-8 cartridge format (as of 0.2.4c)
+
+  author: joseph@lexaloffle.com
+
+  Copyright (c) 2020-22  Lexaloffle Games LLP
+*/
+
 use std::{fmt, cmp::min};
 
 const PXA_MIN_BLOCK_LEN: usize = 3;
@@ -14,6 +22,7 @@ struct PxaDecompressor<'a> {
     literal: [u8; 256],
     literal_pos: [u8; 256],
 }
+
 impl fmt::Debug for PxaDecompressor<'_> {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt.debug_struct("PxaDecompressor")

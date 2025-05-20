@@ -2,6 +2,10 @@
 name = "pico8_decompress"
 version = "0.1.0"
 edition = "2024"
+authors = ["Joseph White <joseph@lexaloffle.com>", "Shane Celis <shane.celis@gmail.com>"]
+readme = "README.md"
+license = "MIT"
+repository = "https://github.com/shanecelis/pico8_decompress"
 
 [dependencies]
 png = { version = "0.17.16", optional = true }
