@@ -27,6 +27,8 @@ impl fmt::Debug for PxaDecompressor<'_> {
 
 #[derive(thiserror::Error, Debug)]
 pub enum PxaError {
+    #[error("Invalid header")]
+    InvalidHeader,
     #[error("Literal overflow")]
     LiteralOverflow,
 }
@@ -154,13 +156,16 @@ impl<'a> PxaDecompressor<'a> {
     }
 
     pub fn decompress(&mut self, max_len: Option<usize>) -> Result<Vec<u8>, PxaError> {
-        let mut header: [usize; 8] = [0; 8];
+        let mut header: [u8; 8] = [0; 8];
         for item in &mut header {
-            *item = self.getval(8);
+            *item = self.getval(8) as u8;
+        }
+        if header[0] != 0 || header[1] != b'p' || header[2] != b'x' || header[3] != b'a' {
+            return Err(PxaError::InvalidHeader);
         }
 
-        let raw_len = (header[4] << 8) | header[5];
-        let comp_len = (header[6] << 8) | header[7];
+        let raw_len = ((header[4] as usize) << 8) | header[5] as usize;
+        let comp_len = ((header[6] as usize) << 8) | header[7] as usize;
         let max_len = max_len.map(|x| min(x, raw_len)).unwrap_or(raw_len);
         self.dest_buf = vec![0x00; max_len];
 

@@ -1,6 +1,7 @@
 #[cfg(feature = "png")]
 use std::io::{self};
 pub mod pxa;
+pub mod p8;
 /// Extract the two least significant bits from PNG RGBA frame data.
 pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     let mut v = Vec::with_capacity(bytes.len() / 4);
@@ -15,6 +16,46 @@ pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
         }
     }
     v
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Compression {
+    Pxa,
+    P8,
+    Legacy,
+}
+
+#[derive(thiserror::Error, Debug)]
+pub enum Error {
+    #[error("p8 decompression error: {0}")]
+    P8(#[from] p8::P8Error),
+    #[error("pxa decompression error: {0}")]
+    Pxa(#[from] pxa::PxaError),
+}
+
+fn compression_header(src_buf: &[u8]) -> Compression {
+
+    if src_buf[0] == 0 || src_buf[1] == b'p' || src_buf[2] == b'x' || src_buf[3] == b'a' {
+        Compression::Pxa
+    } else if src_buf[0] == b':' || src_buf[1] == b'c' || src_buf[2] == b':' || src_buf[3] == 0 {
+        Compression::P8
+    } else {
+        Compression::Legacy
+    }
+}
+
+pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, Error> {
+    match compression_header(src_buf) {
+        Compression::Pxa => Ok(pxa::decompress(src_buf, max_len)?),
+        Compression::P8 => {
+            // No max length?
+            let mut output = vec![0; 65536];
+            let size = p8::decompress(src_buf, &mut output)?;
+            output.truncate(size);
+            Ok(output)
+        },
+        Compression::Legacy => todo!(),
+    }
 }
 
 /// Extract two least significant bits from PNG file contents directly.

@@ -16,7 +16,7 @@ fn main() -> io::Result<()> {
     // Grab the bytes of the image.
     let mut out = io::stdout();
     // let mut code = vec![];
-    let code = decompress(&v[0x4300..=0x7fff], None).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let code = pxa::decompress(&v[0x4300..=0x7fff], None).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
     // eprintln!("size {}", code.len());
     let _ = out.write(&code)?;
     // out.write(&v[..]);
