@@ -1,7 +1,11 @@
+#![doc(html_root_url = "https://docs.rs/pico8_decompress/0.1.0")]
+#![doc = include_str!("../README.md")]
+#![forbid(missing_docs)]
 #[cfg(feature = "png")]
 use std::io::{self};
 pub mod p8;
 pub mod pxa;
+
 /// Extract the two least significant bits from PNG RGBA frame data.
 pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     let mut v = Vec::with_capacity(bytes.len() / 4);
@@ -18,17 +22,24 @@ pub fn extract_bits(bytes: &[u8]) -> Vec<u8> {
     v
 }
 
+/// Compression kinds
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Compression {
+    /// The latest compression scheme
     Pxa,
+    /// The previous compression scheme
     P8,
+    /// First and probably no compression
     Legacy,
 }
 
+/// Errors
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
+    /// P8 error
     #[error("p8 decompression error: {0}")]
     P8(#[from] p8::P8Error),
+    /// PXA error
     #[error("pxa decompression error: {0}")]
     Pxa(#[from] pxa::PxaError),
 }
@@ -43,6 +54,7 @@ fn compression_header(src_buf: &[u8]) -> Compression {
     }
 }
 
+/// Decompress bytes using header to determine if it is Pxa or P8 compression.
 pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, Error> {
     match compression_header(src_buf) {
         Compression::Pxa => Ok(pxa::decompress(src_buf, max_len)?),

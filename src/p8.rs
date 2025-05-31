@@ -1,3 +1,4 @@
+//! p8 decompression
 /*
   (c) Copyright 2014-2016 Lexaloffle Games LLP
   author: joseph@lexaloffle.com
@@ -30,17 +31,21 @@ const FUTURE_CODE2: &str =
 
 const LITERAL: &str = "^\n 0123456789abcdefghijklmnopqrstuvwxyz!#%(){}[]<>+=/*:;.,~_";
 
+/// P8 decomression error
 #[derive(thiserror::Error, Debug)]
 pub enum P8Error {
+    /// Invalid block
     #[error("Invalid block reference")]
     InvalidBlock,
+    /// Output exceeded
     #[error("Decompressed length exceeds output buffer")]
     OutputExceeded,
+    /// End of input
     #[error("Unexpected end of input")]
     EndOfInput,
 }
 
-// decompresses the mini format used in .p8.png code sections
+/// Decompress the mini format used in .p8.png code sections.
 pub fn decompress(input: &[u8], output: &mut [u8]) -> Result<usize, P8Error> {
     let mut in_pos = 0;
 

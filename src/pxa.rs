@@ -1,3 +1,4 @@
+//! PXA decompression
 /*
   pxa compression snippets for PICO-8 cartridge format (as of 0.2.4c)
 
@@ -34,10 +35,13 @@ impl fmt::Debug for PxaDecompressor<'_> {
     }
 }
 
+/// A PXA decompression error
 #[derive(thiserror::Error, Debug)]
 pub enum PxaError {
+    /// Invalid header
     #[error("Invalid header")]
     InvalidHeader,
+    /// Literal character overflow
     #[error("Literal overflow")]
     LiteralOverflow,
 }
@@ -241,10 +245,9 @@ impl<'a> PxaDecompressor<'a> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::*;
     const COMPRESSED_DATA: &[u8] = include_bytes!("p8png-test.p8.png");
     fn decompress_data(max_len: Option<usize>) -> Vec<u8> {
-        let v = extract_bits_from_png(COMPRESSED_DATA).unwrap();
+        let v = crate::extract_bits_from_png(COMPRESSED_DATA).unwrap();
         // grab the bytes of the image.
         decompress(&v[0x4300..=0x7fff], max_len).unwrap()
     }
