@@ -1,5 +1,6 @@
 [package]
 name = "pico8_decompress"
+description = "Decompresses Pico-8 text"
 version = "0.1.0"
 edition = "2024"
 authors = ["Joseph White <joseph@lexaloffle.com>", "Shane Celis <shane.celis@gmail.com>"]
@@ -10,6 +11,9 @@ repository = "https://github.com/shanecelis/pico8_decompress"
 [dependencies]
 png = { version = "0.17.16", optional = true }
 thiserror = "2.0.12"
+
+[dev-dependencies]
+version-sync = "0.9.5"
 
 [features]
 default = [ "png" ]
