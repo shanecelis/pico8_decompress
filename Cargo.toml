@@ -4,6 +4,13 @@ description = "Decompresses Pico-8 text"
 version = "0.1.0"
 edition = "2024"
 authors = ["Joseph White <joseph@lexaloffle.com>", "Shane Celis <shane.celis@gmail.com>"]
+keywords = [
+    "pico-8",
+    "gamedev",
+]
+categories = [
+    "game-development"
+]
 readme = "README.md"
 license = "MIT"
 repository = "https://github.com/shanecelis/pico8_decompress"
