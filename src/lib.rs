@@ -37,10 +37,10 @@ enum Compression {
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     /// P8 error
-    #[error("p8 decompression error: {0}")]
+    #[error("P8 decompression error: {0}")]
     P8(#[from] p8::P8Error),
     /// PXA error
-    #[error("pxa decompression error: {0}")]
+    #[error("PXA decompression error: {0}")]
     Pxa(#[from] pxa::PxaError),
 }
 
@@ -54,7 +54,7 @@ fn compression_header(src_buf: &[u8]) -> Compression {
     }
 }
 
-/// Decompress bytes using header to determine if it is Pxa or P8 compression.
+/// Decompress bytes using header to determine if it is PXA or P8 compression.
 pub fn decompress(src_buf: &[u8], max_len: Option<usize>) -> Result<Vec<u8>, Error> {
     match compression_header(src_buf) {
         Compression::Pxa => Ok(pxa::decompress(src_buf, max_len)?),

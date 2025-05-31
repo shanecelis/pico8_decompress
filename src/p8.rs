@@ -1,4 +1,4 @@
-//! p8 decompression
+//! P8 decompression
 /*
   (c) Copyright 2014-2016 Lexaloffle Games LLP
   author: joseph@lexaloffle.com
